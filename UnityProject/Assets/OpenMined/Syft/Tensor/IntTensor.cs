@@ -371,7 +371,11 @@ namespace OpenMined.Syft.Tensor
                     var result = Sqrt();
                     return result.Id + "";
                 }
-
+                case "rsqrt":
+                {
+                    var result = Rsqrt();
+                    return result.Id + "";   
+                }
                 case "sin":
                 {
                      var result = Sin();

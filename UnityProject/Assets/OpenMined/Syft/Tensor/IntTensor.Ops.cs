@@ -342,6 +342,18 @@ namespace OpenMined.Syft.Tensor
             return result;
         }
 
+        public IntTensor Rsqrt(bool inline = false)
+        {   
+
+            if (dataOnGpu)
+            {
+                throw new NotImplementedException();
+            }
+
+            IntTensor result = factory.Create(this.shape);
+            result.Data = data.AsParallel().Select(x => 1 / (int) Math.Sqrt(x)).ToArray();
+            return result;
+        }
 
         // Function called by Exp to handle Integer Overflow
         private int handleOverFlow(int x)

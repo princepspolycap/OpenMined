@@ -443,6 +443,25 @@ namespace OpenMined.Tests.Tensor.IntTensor
         }
 
         [Test]
+        public void Rsqrt()
+        {
+            int[] data1 = {1, 2, 3, 4};
+            int[] shape1 = {2, 2};
+
+            var tensor1 = ctrl.intTensorFactory.Create(_data: data1, _shape: shape1);
+            var result = tensor1.Rsqrt();
+
+            int[] data2 = {1, 1, 1, 0};
+            int[] shape2 = {2, 2};
+            var expectedTensor = ctrl.intTensorFactory.Create(_data: data2, _shape: shape2);
+
+            for (int i = 0; i < tensor1.Data.Length; i++)
+            {
+                Assert.AreEqual(expectedTensor[i], result[i]);
+            }
+        }
+
+        [Test]
         public void Sub()
         {
             int[] data1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
