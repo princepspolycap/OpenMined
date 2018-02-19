@@ -342,16 +342,16 @@ namespace OpenMined.Syft.Tensor
             return result;
         }
 
-        public IntTensor Rsqrt(bool inline = false)
+        public FloatTensor Rsqrt(bool inline = false)
         {   
+            FloatTensor result = factory.ctrl.floatTensorFactory.Create(this.shape);
 
             if (dataOnGpu)
             {
                 throw new NotImplementedException();
             }
 
-            IntTensor result = factory.Create(this.shape);
-            result.Data = data.AsParallel().Select(x => 1 / (int) Math.Sqrt(x)).ToArray();
+            result.Data = data.AsParallel().Select(x => (float)(1 / Math.Sqrt(x))).ToArray();    
             return result;
         }
 

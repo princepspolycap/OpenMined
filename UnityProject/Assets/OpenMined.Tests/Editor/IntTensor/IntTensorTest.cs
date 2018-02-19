@@ -445,15 +445,15 @@ namespace OpenMined.Tests.Tensor.IntTensor
         [Test]
         public void Rsqrt()
         {
-            int[] data1 = {1, 2, 3, 4};
+            int[] data1 = {1, 1, 1, 4};
             int[] shape1 = {2, 2};
 
             var tensor1 = ctrl.intTensorFactory.Create(_data: data1, _shape: shape1);
             var result = tensor1.Rsqrt();
 
-            int[] data2 = {1, 1, 1, 0};
+            float[] data2 = {1.0f, 1.0f, 1.0f, 0.5f };
             int[] shape2 = {2, 2};
-            var expectedTensor = ctrl.intTensorFactory.Create(_data: data2, _shape: shape2);
+            var expectedTensor = ctrl.floatTensorFactory.Create(_data: data2, _shape: shape2);
 
             for (int i = 0; i < tensor1.Data.Length; i++)
             {
