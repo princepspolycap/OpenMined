@@ -19,6 +19,8 @@ namespace OpenMined.Syft.Tensor
         [SerializeField] private static int AddMMKernel_;
         [SerializeField] private static int AddMMTKernel_;
         [SerializeField] private static int AddMVKernel_;
+        [SerializeField] private static int AddrKernel;
+        [SerializeField] private static int AddrKernel_;
         [SerializeField] private static int CeilKernel;
         [SerializeField] private static int CeilKernel_;
         [SerializeField] private static int CopyBufferKernel;
@@ -100,6 +102,8 @@ namespace OpenMined.Syft.Tensor
             AddMMKernel_ = shader.FindKernel("AddMM_");
             AddMMTKernel_ = shader.FindKernel("AddMMT_");
             AddMVKernel_ = shader.FindKernel("AddMV_");
+            AddrKernel = shader.FindKernel("Addr");
+            AddrKernel_ = shader.FindKernel("Addr_");
             CeilKernel = shader.FindKernel("Ceil");
             CeilKernel_ = shader.FindKernel("Ceil_");
             CopyBufferKernel = shader.FindKernel("CopyBuffer");
@@ -295,7 +299,7 @@ namespace OpenMined.Syft.Tensor
                     shader.SetBuffer(AddElemKernel, "AddElemDataA", this.DataBuffer);
                     shader.SetBuffer(AddElemKernel, "AddElemDataB", tensor.DataBuffer);
                     shader.SetBuffer(AddElemKernel, "AddElemDataResult", result.DataBuffer);
-                    
+
                     shader.Dispatch(AddElemKernel, this.size, 1, 1);
                 }
                 else
@@ -470,6 +474,51 @@ namespace OpenMined.Syft.Tensor
             shader.SetBuffer(AddMVKernel_, "AddMVVectorData", vector.DataBuffer);
             shader.Dispatch(AddMVKernel_, this.Size, 1, 1);
             refShapeBuffer.Release();
+        }
+
+        public FloatTensor AddrGPU(float beta, FloatTensor vec1, FloatTensor vec2, float alpha)
+        {
+          Debug.LogFormat("<color=blue>FloatTensor.AddrGPU dataOnGpu: {0}</color>", dataOnGpu);
+
+          var result = this.emptyTensorCopy();
+
+          var strideBuffer = SendIntToGpu(AddrKernel, this.shape[1], "AddrStride");
+          var betaBuffer = SendFloatToGpu(AddrKernel, beta, "AddrBeta");
+          var alphaBuffer = SendFloatToGpu(AddrKernel, alpha, "AddrAlpha");
+
+          // associate arrays with gpu
+          shader.SetBuffer(AddrKernel, "AddrMatrix", dataBuffer);
+          shader.SetBuffer(AddrKernel, "AddrVec1", vec1.DataBuffer);
+          shader.SetBuffer(AddrKernel, "AddrVec2", vec2.DataBuffer);
+          shader.SetBuffer(AddrKernel, "AddrResult", result.DataBuffer);
+
+          // launch kernel
+          shader.Dispatch(AddrKernel, size, 1, 1);
+
+          strideBuffer.Release();
+          betaBuffer.Release();
+          alphaBuffer.Release();
+
+          return result;
+        }
+
+        public void AddrGPU_(float beta, FloatTensor vec1, FloatTensor vec2, float alpha)
+        {
+          var strideBuffer = SendIntToGpu(AddrKernel_, shape[1], "AddrStride_");
+          var betaBuffer = SendFloatToGpu(AddrKernel_, beta, "AddrBeta_");
+          var alphaBuffer = SendFloatToGpu(AddrKernel_, alpha, "AddrAlpha_");
+
+          // associate arrays with gpu
+          shader.SetBuffer(AddrKernel_, "AddrMatrix_", dataBuffer);
+          shader.SetBuffer(AddrKernel_, "AddrVec1_", vec1.DataBuffer);
+          shader.SetBuffer(AddrKernel_, "AddrVec2_", vec2.DataBuffer);
+
+          // launch kernel
+          shader.Dispatch(AddrKernel_, size, 1, 1);
+
+          strideBuffer.Release();
+          betaBuffer.Release();
+          alphaBuffer.Release();
         }
 
         public void CeilGPU_()

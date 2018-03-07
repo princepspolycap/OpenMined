@@ -12,7 +12,7 @@ namespace OpenMined.Syft.Tensor
     {
 
         private FloatTensorFactory factory;
-        
+
         public bool Autograd
         {
             get { return autograd; }
@@ -46,12 +46,12 @@ namespace OpenMined.Syft.Tensor
             creation_op = _creation_op;
             usage_count = 1;
             InitGraph();
-            
+
             if (autograd)
             {
                 InitAutograd();
             }
-            
+
             // First: check that shape is valid.
             if (_shape == null || _shape.Length == 0)
             {
@@ -149,35 +149,35 @@ namespace OpenMined.Syft.Tensor
                 shader = factory.GetShader();
             }
         }
-        
+
         // a poorly designed hash function based on the shape and location (CPU/GPU) of this tensor
-        // it's used primarily to help search for 
+        // it's used primarily to help search for
         public int ConfigShapeHash()
         {
-            
+
             long hash = 0;
             if (DataOnGpu)
                 hash += 31415;
-            
+
             for (int i = 0; i < shape.Length; i++)
             {
                 hash += ((hash * 314159) % (long)int.MaxValue + (long)shape[i]) % int.MaxValue;
                 hash = hash % int.MaxValue;
             }
-            
+
             return (int) hash;
         }
-        
+
         // a reasonalbe hash based on size and data location
-        // it's used primarily to help search for 
+        // it's used primarily to help search for
         public int ConfigSizeHash()
         {
-            
+
             long hash = 0;
             if (DataOnGpu)
                 hash += int.MaxValue / 2;
             hash += size;
-            
+
             return (int) (hash % int.MaxValue);
         }
 
@@ -270,6 +270,30 @@ namespace OpenMined.Syft.Tensor
                     AddMatrixVectorProduct(tensor_1, tensor_2);
                     return msgObj.functionCall + ": OK";
                 }
+                case "addr":
+                {
+                  // [beta, vec1.id, vec2.id, alpha]
+                  float beta = float.Parse(msgObj.tensorIndexParams[0]);
+                  FloatTensor vec1 = ctrl.floatTensorFactory.Get(int.Parse(msgObj.tensorIndexParams[1]));
+                  FloatTensor vec2 = ctrl.floatTensorFactory.Get(int.Parse(msgObj.tensorIndexParams[2]));
+                  float alpha = float.Parse(msgObj.tensorIndexParams[3]);
+
+                  FloatTensor result = this.Addr(beta, vec1, vec2, alpha);
+
+                  return result.id + "";
+                }
+                case "addr_":
+                {
+                  // [beta, vec1.id, vec2.id, alpha]
+                  float beta = float.Parse(msgObj.tensorIndexParams[0]);
+                  FloatTensor vec1 = ctrl.floatTensorFactory.Get(int.Parse(msgObj.tensorIndexParams[1]));
+                  FloatTensor vec2 = ctrl.floatTensorFactory.Get(int.Parse(msgObj.tensorIndexParams[2]));
+                  float alpha = float.Parse(msgObj.tensorIndexParams[3]);
+
+                  this.Addr(beta, vec1, vec2, alpha, inline: true);
+
+                  return this.id + "";
+                }
                 case "backward":
                 {
                     if (msgObj.tensorIndexParams.Length > 0)
@@ -303,11 +327,11 @@ namespace OpenMined.Syft.Tensor
                 {
 
                     float ? min = null;
-                    float ? max = null; 
+                    float ? max = null;
 
                     if (msgObj.tensorIndexParams[0]=="None")
                     {
-                        min = null;  
+                        min = null;
                     }
                     else
                     {
@@ -316,7 +340,7 @@ namespace OpenMined.Syft.Tensor
 
                     if (msgObj.tensorIndexParams[1]=="None")
                     {
-                        max = null;  
+                        max = null;
                     }
                     else
                     {
@@ -864,7 +888,7 @@ namespace OpenMined.Syft.Tensor
                 }
 
                 //TODO: For splitting, though dim has a default value of 0
-                //we are getting it from msgObj.tensorIndexParams 
+                //we are getting it from msgObj.tensorIndexParams
                 //because otherwise we don't know whether
                 //the last element is a split size
                 //or an axis dimension. But could perhaps use
@@ -1138,7 +1162,7 @@ namespace OpenMined.Syft.Tensor
                 {
                     int dim = -1;
                     bool keepdim = false;
-                    
+
                     if (msgObj.tensorIndexParams.Length > 0)
                     {
                         dim = int.Parse(msgObj.tensorIndexParams[0]);
@@ -1173,7 +1197,7 @@ namespace OpenMined.Syft.Tensor
 
                     return Mean(dim: dim, keepdim: keepdim).Id.ToString();
                 }
-                case "stride": 
+                case "stride":
                 {
                     if (msgObj.tensorIndexParams.Length > 0) {
                         var dim = int.Parse(msgObj.tensorIndexParams[0]);
@@ -1181,7 +1205,7 @@ namespace OpenMined.Syft.Tensor
                     } else {
                         return string.Join(" ", Strides);
                     }
-                    
+
                 }
                 default:
                     break;
@@ -1202,7 +1226,7 @@ namespace OpenMined.Syft.Tensor
                 tmpData = Data;
             }
             TensorProto t = new TensorProto
-            {   
+            {
                 Dims = { Array.ConvertAll(this.Shape, val => (long)val) },
                 DataType = TensorProto.Types.DataType.Float,
                 FloatData = { tmpData },

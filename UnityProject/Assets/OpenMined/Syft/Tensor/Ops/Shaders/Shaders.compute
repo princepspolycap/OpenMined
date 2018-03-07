@@ -242,6 +242,43 @@ void AddMV_ (uint3 id : SV_DispatchThreadID){
 	}
 }
 
+#pragma kernel Addr
+
+StructuredBuffer<int> AddrStride;
+StructuredBuffer<float> AddrBeta;
+StructuredBuffer<float> AddrAlpha;
+StructuredBuffer<float> AddrMatrix;
+StructuredBuffer<float> AddrVec1;
+StructuredBuffer<float> AddrVec2;
+RWStructuredBuffer<float> AddrResult;
+
+[numthreads(4,1,1)]
+void Addr (uint3 id : SV_DispatchThreadID){
+	int stride = AddrStride[0];
+	int col = (int) id.x % stride;
+	int row = (int) (id.x - col) / stride;
+	AddrResult[id.x] = AddrBeta[0]*AddrMatrix[id.x]
+		+ AddrAlpha[0]*AddrVec1[row]*AddrVec2[col];
+}
+
+#pragma kernel Addr_
+
+StructuredBuffer<int> AddrStride_;
+StructuredBuffer<float> AddrBeta_;
+StructuredBuffer<float> AddrAlpha_;
+RWStructuredBuffer<float> AddrMatrix_;
+StructuredBuffer<float> AddrVec1_;
+StructuredBuffer<float> AddrVec2_;
+
+[numthreads(4,1,1)]
+void Addr_ (uint3 id : SV_DispatchThreadID){
+	int stride = AddrStride_[0];
+	int col = (int) id.x % stride;
+	int row = (int) (id.x - col) / stride;
+	AddrMatrix_[id.x] = AddrBeta_[0]*AddrMatrix_[id.x]
+		+ AddrAlpha_[0]*AddrVec1_[row]*AddrVec2_[col];
+}
+
 #pragma kernel Ceil
 
 StructuredBuffer<float> CeilData;
